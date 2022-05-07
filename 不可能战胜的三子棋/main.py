@@ -1,6 +1,4 @@
-from game import *
-
-
+from game_test import *
 
 if __name__ == '__main__':
     pygame.init()  # 加载模块
@@ -11,18 +9,14 @@ if __name__ == '__main__':
     windows.blit(background, (0, 0))  # 渲染游戏背景图
     circle_image = pygame.image.load('images/圈圈.png')  # 加载圆圈图
     circle = pygame.transform.scale(circle_image, (180, 180))  # 拉伸圆圈图使其适应棋盘的方框
-    # windows.blit(circle,(83,75)) #圆圈在第一个格子里的坐标
 
     pygame.display.flip()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print(player_record)
-                print(AI_record)
-                print(all_record)
                 pygame.quit()
                 exit()
             if event.type == pygame.MOUSEBUTTONUP:
-                if(player(windows, event.pos)):  #保证玩家落子之后才到AI落子
+                if (player(windows, event.pos)) and len(all_record) != 9:  # 保证玩家落子之后且棋盘还有空缺位置才到AI落子
+                    # 注意：all_record是game.py中的参数
                     AI(windows)
-
