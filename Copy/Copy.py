@@ -72,7 +72,8 @@ def copy(src, target):
         print("输入的目标路径不是绝对路径！")
 
 
-print(os.path.dirname(__file__))
-src_path = input("请输入原文件的绝对路径：")
-target_path = input("请输入目标文件夹的绝对路径：")
-copy(src_path, target_path)
+if __name__ == '__main__':
+    print(os.path.dirname(__file__))
+    src_path = input("请输入原文件的绝对路径：")
+    target_path = input("请输入目标文件夹的绝对路径：")
+    copy(src_path, target_path)
