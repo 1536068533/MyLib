@@ -1,5 +1,5 @@
-import pygame.display
-from game_test import *
+import pygame
+from game import *
 
 
 def first_choice(windows, pos):
@@ -29,6 +29,7 @@ if __name__ == '__main__':
     windows.blit(xmb, (0, 0))  # 渲染游戏主界面
     pygame.display.flip()  # 首次刷新游戏画面
 
+    '''先获取先手信息'''
     first = 0  # 先手信息（AI或human），初始为0
     while first == 0:
         for event in pygame.event.get():
@@ -40,6 +41,22 @@ if __name__ == '__main__':
                 if first:
                     break  # 判断内容非0则说明获取到了先手信息，跳出循环
     limit_first = 1  # 限制次数为1的参数，初值为1
+
+    '''如果玩家选择自己先手，则请求AI先手'''
+    if first =='human':
+        while True:
+            for i in range(20):
+                for event in pygame.event.get():#保证随时能退出
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        exit()
+                time.sleep(0.05)
+                gif_image = pygame.image.load('gif/不要/' + str(i) + '.jpg')  # 加载'不要'gif图
+                gif = pygame.transform.scale(gif_image, (WINDOW_X, WINDOW_Y))  # 拉伸游戏背景图使其适应游戏窗口
+                windows.blit(gif, (0, 0))
+                pygame.display.update()
+
+    '''游戏开始'''
     while True:
         if first == 'AI' and limit_first:  # 当先手是AI并且第一颗棋子还没下的时候进来
             AI_aggressive(windows)

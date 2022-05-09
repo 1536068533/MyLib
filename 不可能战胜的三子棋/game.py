@@ -201,7 +201,6 @@ def AI_aggressive(window):
 
     all_record.update(AI_record)
     pygame.display.update()  # 刷新游戏画面
-    cheer(window, circle, circle_disappear, AI_record)  # 调用cheer函数判断是否已获胜
 
 
 def referee(player_record):
@@ -249,6 +248,7 @@ def referee(player_record):
 
 def cheer(window, image, image_disappear, player):
     '''
+    胜利欢呼函数
     通过判断referee返回的类型，如果是列表说明获胜了
     获胜则让连成3子的地方闪烁
     :param window: pygame的游戏窗口对象
