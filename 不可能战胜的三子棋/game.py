@@ -5,15 +5,13 @@ import time
 import datetime
 from tkinter import *
 from PIL import Image, ImageTk, ImageSequence
+from common import *
 
 WINDOW_X = 800  # 游戏窗口宽度
 WINDOW_Y = 800  # 游戏窗口高度
 image_width = 180  # 圆圈和叉叉的宽度
 image_high = 180  # 圆圈和叉叉的高度
 x, y, r, d = 83, 73, 226, 233  # x，y分别是左上叉叉的初始横坐标和纵坐标，r是从左上到中上的叉叉的距离，d是从左上到左边的叉叉的距离
-player_record = set()  # 记录玩家已下棋子的位置
-AI_record = set()  # 记录AI已下棋子的位置
-all_record = set()  # 记录所有已下棋子的位置
 
 cross_image = pygame.image.load('images/叉叉.png')  # 加载叉叉图
 cross = pygame.transform.scale(cross_image, (image_width, image_high))  # 拉伸叉叉图使其适应棋盘的方框
@@ -32,6 +30,18 @@ with open(log_file, mode='w', encoding='utf-8') as stream:  # 清空日志，并
 coord = [[' ' for j in range(3)] for i in range(3)]  # coord初始化，coord和log函数中的status变量配合使用，用于打印到log文件中
 
 
+def initialization_log():
+    '''
+    日志初始化函数，用于将这里的日志初始化
+    :return: 无
+    '''
+    coord = [[' ' for j in range(3)] for i in range(3)]  # coord初始化，coord和log函数中的status变量配合使用，用于打印到log文件中
+    '''日志初始化'''
+    with open(log_file, mode='w', encoding='utf-8') as stream:  # 清空日志，并在第一行写上开始游戏的时间
+        stream.write("游戏开始时间：" + datetime.datetime.now().strftime('%Y年%m月%d日%H时%M分%S秒') + "\n")
+        stream.write("'o'表示AI，'x'表示玩家\n")
+
+
 def player(window, pos):
     '''
     传入一个对象和坐标，在对应的格子中渲染上叉叉的图片
@@ -42,13 +52,13 @@ def player(window, pos):
     for i in range(3):
         for j in range(3):  # 为传入的坐标参数，利用循环判断出叉叉应该出现的位置
             if x + r * j <= pos[0] <= (x + image_width) + r * j and y + d * i <= pos[1] <= (
-                    y + image_high) + d * i and (i, j) not in all_record:
+                    y + image_high) + d * i and (i, j) not in get_all_record():
                 window.blit(cross, (x + r * j, y + d * i))
-                player_record.add((i, j))
+                add_player_record((i, j))
                 log((i, j), 'x')
-                all_record.update(player_record)
+                union_all_record()
                 pygame.display.update()  # 刷新游戏画面
-                cheer(window, cross, cross_disappear, player_record)  # 调用cheer函数判断是否已获胜
+                cheer(window, cross, cross_disappear, get_player_record())  # 调用cheer函数判断是否已获胜
                 return 1
     return 0
 
@@ -74,7 +84,7 @@ def AI(window):
             else:
                 choice = (i, i)
         else:
-            if count == 2 and choice not in all_record:  # 当该斜线已有两个落子并且有空缺位置
+            if count == 2 and choice not in get_all_record():  # 当该斜线已有两个落子并且有空缺位置
                 return choice;
         j = 2  # y坐标
         count = 0  # 初始化
@@ -85,58 +95,58 @@ def AI(window):
                 choice = (i, j)
             j -= 1
         else:
-            if count == 2 and choice not in all_record:  # 当该斜线已有两个落子并且有空缺位置
+            if count == 2 and choice not in get_all_record():  # 当该斜线已有两个落子并且有空缺位置
                 return choice
 
         for i in range(3):  # 纵横检查判断
-            if (i, 0) in record and (i, 1) in record and (i, 2) not in all_record:
+            if (i, 0) in record and (i, 1) in record and (i, 2) not in get_all_record():
                 return (i, 2)
-            elif (i, 0) in record and (i, 2) in record and (i, 1) not in all_record:
+            elif (i, 0) in record and (i, 2) in record and (i, 1) not in get_all_record():
                 return (i, 1)
-            elif (i, 1) in record and (i, 2) in record and (i, 0) not in all_record:
+            elif (i, 1) in record and (i, 2) in record and (i, 0) not in get_all_record():
                 return (i, 0)
-            elif (0, i) in record and (1, i) in record and (2, i) not in all_record:
+            elif (0, i) in record and (1, i) in record and (2, i) not in get_all_record():
                 return (2, i)
-            elif (0, i) in record and (2, i) in record and (1, i) not in all_record:
+            elif (0, i) in record and (2, i) in record and (1, i) not in get_all_record():
                 return (1, i)
-            elif (1, i) in record and (2, i) in record and (0, i) not in all_record:
+            elif (1, i) in record and (2, i) in record and (0, i) not in get_all_record():
                 return (0, i)
         return 0
 
-    choice = judge(AI_record)
-    if len(player_record) == 1 and (1, 1) not in player_record:  # 当AI先手或玩家第一颗棋子没有下在中心时，下在中心处
+    choice = judge(get_AI_record())
+    if len(get_player_record()) == 1 and (1, 1) not in get_player_record():  # 当AI先手或玩家第一颗棋子没有下在中心时，下在中心处
         window.blit(circle, (x + r, y + d))
-        AI_record.add((1, 1))
+        add_AI_record((1, 1))
         log((1, 1), 'o')
-    elif len(player_record) <= 2 and (1, 1) in player_record:
+    elif len(get_player_record()) <= 2 and (1, 1) in get_player_record():
         # 当玩家第一颗棋子下在中心位置时，AI第一次下随机下在四角中的一个，第二次下检查玩家是否将要连成三子，及时阻止，否则随机下在角落处
-        danger = judge(player_record)
+        danger = judge(get_player_record())
         if danger:  # 检查危险，玩家是否将要连成三子，及时阻止
             window.blit(circle, (x + r * danger[1], y + d * danger[0]))
-            AI_record.add(danger)
+            add_AI_record(danger)
             log(danger, 'o')
         else:
             while True:
                 corner = (2 if random.randint(0, 1) == 1 else 0, 2 if random.randint(0, 1) == 1 else 0)
-                if corner not in all_record:
+                if corner not in get_all_record():
                     window.blit(circle, (x + r * corner[1], y + d * corner[0]))
-                    AI_record.add(corner)
+                    add_AI_record(corner)
                     log(corner, 'o')
                     break
     elif choice:  # 当AI快要连成3子时，立即连成三子
         window.blit(circle, (x + r * choice[1], y + d * choice[0]))
-        AI_record.add(choice)
+        add_AI_record(choice)
         log(choice, 'o')
     elif choice == 0:
         try:
-            defend = judge(player_record)  # 当玩家快要连成3子时，及时阻止
+            defend = judge(get_player_record())  # 当玩家快要连成3子时，及时阻止
             window.blit(circle, (x + r * defend[1], y + d * defend[0]))
-            AI_record.add(defend)
+            add_AI_record(defend)
             log(defend, 'o')
         except Exception:
             # 利用随机数选择空缺位置落子，假设下一步下这个地方，是否能促进AI将要连成三子
             hypothesis = set()
-            hypothesis.update(all_record)
+            hypothesis.update(get_all_record())
             # hypothesis猜想，随机出来的位置都填入这个集合中
             break_out = 0  # 用于跳出多层循环
             while True:
@@ -144,9 +154,9 @@ def AI(window):
                 n = random.randint(0, 2)
                 if (m, n) not in hypothesis:
                     hypothesis.add((m, n))
-                    if judge(AI_record.union({(m, n)})):  # 假设下一步下这个地方，能促进AI将要连成三子，就下这个地方
+                    if judge(get_AI_record().union({(m, n)})):  # 假设下一步下这个地方，能促进AI将要连成三子，就下这个地方
                         window.blit(circle, (x + r * n, y + d * m))
-                        AI_record.add((m, n))
+                        add_AI_record((m, n))
                         log((m, n), 'o')
                         break
                 if len(hypothesis) == 9:
@@ -155,20 +165,20 @@ def AI(window):
                     while True:
                         m = random.randint(0, 2)
                         n = random.randint(0, 2)
-                        if (m, n) not in all_record:
+                        if (m, n) not in get_all_record():
                             window.blit(circle, (x + r * n, y + d * m))
-                            AI_record.add((m, n))
+                            add_AI_record((m, n))
                             log((m, n), 'o')
                             break_out = 1
                             break
-                        if len(all_record) == 9:  # 如果all_record集合长度为9说明棋盘已经满了，直接跳出循环
+                        if len(get_all_record()) == 9:  # 如果all_record集合长度为9说明棋盘已经满了，直接跳出循环
                             break_out = 1
                             break
                 if break_out == 1:  # 跳出多层循环
                     break
-    all_record.update(AI_record)
+    union_all_record()
     pygame.display.update()  # 刷新游戏画面
-    cheer(window, circle, circle_disappear, AI_record)  # 调用cheer函数判断是否已获胜
+    cheer(window, circle, circle_disappear, get_AI_record())  # 调用cheer函数判断是否已获胜
 
 
 def AI_aggressive(window):
@@ -177,42 +187,42 @@ def AI_aggressive(window):
     :param window: pygame的窗口对象
     :return: 无
     '''
-    if len(all_record) == 0:  # 第一颗棋先下在中心
+    if len(get_all_record()) == 0:  # 第一颗棋先下在中心
         window.blit(circle, (x + r, y + d))
-        AI_record.add((1, 1))
+        add_AI_record((1, 1))
         log((1, 1), 'o')
-    elif len(player_record) == 1:  # 当玩家下了第一颗棋的时候
-        player_pos = player_record.pop()  # 删除元素时会返回该元素，利用这点获取集合中唯一一个元素
+    elif len(get_player_record()) == 1:  # 当玩家下了第一颗棋的时候
+        player_pos = pop_player_record()  # 删除元素时会返回该元素，利用这点获取集合中唯一一个元素
         if player_pos in {(0, 0), (0, 2), (2, 0), (2, 2)}:  # 如果玩家第一颗棋下在角落，则AI下在其对角
             choice = (player_pos[0] ^ 2, player_pos[1] ^ 2)  # 按位异或，让0变2,2变0
             window.blit(circle, (x + r * choice[1], y + d * choice[0]))
-            AI_record.add(choice)
+            add_AI_record(choice)
             log(choice, 'o')
         else:  # 如果玩家第一颗棋下在上或下或左或右
             pos_choice = [0, 2]  # 让m、n只能随机到0或2
             m = pos_choice[random.randint(0, 1)]
             n = pos_choice[random.randint(0, 1)]
             window.blit(circle, (x + r * n, y + d * m))
-            AI_record.add((m, n))
+            add_AI_record((m, n))
             log((m, n), 'o')
-        player_record.add(player_pos)  # 把刚刚删除的元素放回去
+        add_player_record(player_pos)  # 把刚刚删除的元素放回去
     else:
         AI(window)  # 之后的战略和AI函数相同
 
-    all_record.update(AI_record)
+    union_all_record()
     pygame.display.update()  # 刷新游戏画面
 
 
-def referee(player_record):
+def referee(record):
     '''
     裁判函数，判断输赢
-    :param player_record: 传入对应的玩家记录集合，判断该玩家是否获胜
+    :param record: 传入对应的玩家记录集合，判断该玩家是否获胜
     :return: 如果判断出已获胜，返回获胜列表，对应三棋子坐标，如果没有获胜且棋盘还有空缺位置则返回0，如果平局返回-1
     '''
     winner = list()
     for i in range(3):  # 横向扫描判断是否连成三子
         for j in range(3):
-            if (i, j) in player_record:
+            if (i, j) in record:
                 winner.append((i, j))
             else:
                 winner = []
@@ -222,7 +232,7 @@ def referee(player_record):
 
     for i in range(3):
         for j in range(3):
-            if (j, i) in player_record:
+            if (j, i) in record:
                 winner.append((j, i))
             else:
                 winner = []
@@ -231,7 +241,7 @@ def referee(player_record):
             return winner
 
     for i in range(3):
-        if (i, i) in player_record:
+        if (i, i) in record:
             winner.append((i, i))
         else:
             winner = []
@@ -239,11 +249,54 @@ def referee(player_record):
     else:
         return winner
 
-    if (2, 0) in player_record and (1, 1) in player_record and (0, 2) in player_record:
+    if (2, 0) in record and (1, 1) in record and (0, 2) in record:
         return [(0, 2), (1, 1), (2, 0)]
-    if len(all_record) == 9:
+    if len(get_all_record()) == 9:
         return -1
     return 0
+
+
+def happy_gif(window):
+    '''
+    加载表达开心的gif，并且可以随时关闭游戏窗口
+    :param window: pygame的游戏窗口对象
+    :return: 无
+    '''
+    for m in range(2):
+        for n in range(27):
+            time.sleep(0.05)  # 相当于一秒20帧
+            happy_image = pygame.image.load('gif/开心/' + str(n) + '.jpg')  # 加载'开心'gif图
+            happy = pygame.transform.scale(happy_image, (WINDOW_X, WINDOW_Y))  # 拉伸游戏背景图使其适应游戏窗口
+            window.blit(happy, (0, 0))
+            happy_txt = pygame.image.load('images/嘻嘻嘻.PNG')
+            happy_txt_size = happy_txt.get_size()
+            window.blit(happy_txt, (WINDOW_X / 2 - happy_txt_size[0] / 2, WINDOW_Y * 0.75))
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:  # 保证在gif循环里也能随时退出
+                    pygame.quit()
+                    exit()
+
+
+def daze_gir(window):
+    '''
+    加载表达面容呆滞的gif，并且可以随时关闭游戏窗口
+    :param window: pygame的游戏窗口对象
+    :return: 无
+    '''
+    for m in range(10):
+        for n in range(5):
+            time.sleep(0.05)  # 相当于一秒20帧
+            daze_image = pygame.image.load('gif/呆/' + str(n) + '.png')  # 加载'呆'gif图
+            daze = pygame.transform.scale(daze_image, (WINDOW_X, WINDOW_Y))  # 拉伸游戏背景图使其适应游戏窗口
+            window.blit(daze, (0, 0))
+            tie_txt = pygame.image.load('images/平局.PNG')
+            window.blit(tie_txt, (WINDOW_X * 0.8, WINDOW_Y * 0.3))
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:  # 保证在gif循环里也能随时退出
+                    pygame.quit()
+                    exit()
 
 
 def cheer(window, image, image_disappear, player):
@@ -255,7 +308,7 @@ def cheer(window, image, image_disappear, player):
     :param player: 传入玩家棋局数据，player_record或AI_record集合
     :return: 无
     '''
-    result = referee(player)
+    result = referee(player)  # 获胜返回列表，对应三棋子坐标，没获胜且棋盘还有空缺位置则返回0，如果平局返回-1
     if type(result) is list:  # 获胜时让连成3子的地方闪烁
         for i in range(3):
             for i in range(3):
@@ -266,11 +319,15 @@ def cheer(window, image, image_disappear, player):
                 window.blit(image, (x + r * result[i][1], y + d * result[i][0]))
             pygame.display.update()  # 刷新游戏画面
             time.sleep(0.2)
-        for i in range(3):  # 获胜后立即填满all_record集合，防止玩家在获胜后继续点击下棋（画叉叉）
+        for i in range(3):  # 获胜后立即填满all_record，防止玩家在获胜后继续点击下棋（画叉叉）
             for j in range(3):
-                all_record.add((i, j))
-        if player == player_record:  # 如果胜利的是玩家
+                add_all_record((i, j))
+        if player == get_player_record():  # 如果胜利的是玩家
             incredible()  # 调用该函数处理玩家胜利的情况，incredible不可思议的，难以置信的
+        elif player == get_AI_record():  # 如果胜利的是AI，加载获胜gif
+            happy_gif(window)
+    elif result == -1:  # 平局时处理
+        daze_gir(window)
 
 
 def log(pos, mark):
