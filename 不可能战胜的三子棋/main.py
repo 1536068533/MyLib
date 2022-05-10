@@ -1,6 +1,31 @@
 from game import *
 
 
+def start_game(window):
+    '''
+    游戏主界面，有play按钮，按钮背后播放gif动画，点中按钮则跳出本函数
+    :param window: pygame的游戏窗口对象
+    :return: None
+    '''
+    while True:
+        for n in range(18):
+            time.sleep(0.05)  # 相当于一秒20帧
+            dance_image = pygame.image.load('gif/跳舞/' + str(n) + '.jpg')  # 加载'呆'gif图
+            dance = pygame.transform.scale(dance_image, (WINDOW_X, WINDOW_Y))  # 拉伸游戏背景图使其适应游戏窗口
+            window.blit(dance, (0, 0))
+            play_button = pygame.image.load('images/play.png')
+            play_button_size = play_button.get_size()
+            window.blit(play_button, (WINDOW_X / 2 - play_button_size[0] / 2, WINDOW_Y / 2 - play_button_size[1] / 2))
+            pygame.display.flip()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:  # 保证在gif循环里也能随时退出
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if 326 <= event.pos[0] <= 483 and 369 <= event.pos[1] <= 419:
+                        return
+
+
 def first_choice(windows, pos):
     '''
     检测玩家选择自己先手还是AI先手
@@ -26,7 +51,7 @@ def first_choice(windows, pos):
                     if event.type == pygame.MOUSEBUTTONUP:
                         pos = event.pos
                         if 180 <= pos[0] <= 615 and 567 <= pos[1] <= 626:  # 判定是否点在同意请求的区域
-                            '''因请求被同意而高兴，调用game.py的happ_gif函数'''
+                            '''因请求被同意而高兴，调用game.py的happy_gif函数'''
                             happy_gif(windows)
                             '''刷新棋局画面准备开始游戏'''
                             background_image = pygame.image.load('images/棋盘.jpg')  # 加载游戏背景图
@@ -64,8 +89,9 @@ def main():
     游戏运行主函数，负责游戏过程
     :return:无
     '''
-    xmb_image = pygame.image.load('images/主界面.png')  # 加载游戏背景图
-    xmb = pygame.transform.scale(xmb_image, (WINDOW_X, WINDOW_Y))  # 拉伸游戏背景图使其适应游戏窗口
+    start_game(windows)  # 主界面，点击play开始游戏
+    xmb_image = pygame.image.load('images/选择先手.png')  # 加载'选择先手'图
+    xmb = pygame.transform.scale(xmb_image, (WINDOW_X, WINDOW_Y))  # 拉伸该图使其适应游戏窗口
     windows.blit(xmb, (0, 0))  # 渲染游戏主界面
     pygame.display.flip()  # 刷新整个游戏画面
     '''先获取先手信息'''

@@ -278,7 +278,7 @@ def happy_gif(window):
                     exit()
 
 
-def daze_gir(window):
+def daze_gif(window):
     '''
     加载表达面容呆滞的gif，并且可以随时关闭游戏窗口
     :param window: pygame的游戏窗口对象
@@ -327,7 +327,7 @@ def cheer(window, image, image_disappear, player):
         elif player == get_AI_record():  # 如果胜利的是AI，加载获胜gif
             happy_gif(window)
     elif result == -1:  # 平局时处理
-        daze_gir(window)
+        daze_gif(window)
 
 
 def log(pos, mark):
