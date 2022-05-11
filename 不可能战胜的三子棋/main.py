@@ -22,7 +22,6 @@ def start_game(window):
                     pygame.quit()
                     exit()
                 if event.type == pygame.MOUSEBUTTONUP:
-                    print(event.pos)
                     if 289 <= event.pos[0] <= 509 and 567 <= event.pos[1] <= 650:
                         return
 
@@ -68,7 +67,7 @@ def first_choice(windows, pos):
                             windows.blit(background, (0, 0))  # 渲染游戏背景图
                             pygame.display.update()  # 刷新游戏画面
                             return 'human'
-                time.sleep(0.05)
+                clock.tick(24)  # 一秒22帧
                 gif_image = pygame.image.load('gif/不要/' + str(i) + '.jpg')  # 加载'不要'gif图
                 gif = pygame.transform.scale(gif_image, (WINDOW_X, WINDOW_Y))  # 拉伸游戏背景图使其适应游戏窗口
                 windows.blit(gif, (0, 0))
@@ -131,9 +130,12 @@ def main():
 if __name__ == '__main__':
     '''游戏初始化'''
     pygame.init()  # 加载模块
+    pygame.mixer.init()  # 加载混音模块
     windows = pygame.display.set_mode((WINDOW_X, WINDOW_Y))  # 设置游戏窗口大小
     pygame.display.set_caption('不可能战胜的三子棋')  # 设置游戏标题
     clock = pygame.time.Clock()  # 游戏时钟对象
+    music = pygame.mixer.music.load('sound/LUV2&Lino xd - Lost In The Night (Explicit) [mqms2].mp3')  # 加载音乐
+    pygame.mixer.music.play(-1)  # -1 值告诉 Pygame 无限循环音乐文件
 
     '''游戏主体'''
     while True:

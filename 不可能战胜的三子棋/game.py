@@ -262,9 +262,10 @@ def happy_gif(window):
     :param window: pygame的游戏窗口对象
     :return: 无
     '''
-    for m in range(2):
+    clock = pygame.time.Clock()  # 游戏时钟对象
+    for m in range(3):
         for n in range(27):
-            time.sleep(0.05)  # 相当于一秒20帧
+            clock.tick(30)  # 每秒运行23帧
             happy_image = pygame.image.load('gif/开心/' + str(n) + '.jpg')  # 加载'开心'gif图
             happy = pygame.transform.scale(happy_image, (WINDOW_X, WINDOW_Y))  # 拉伸游戏背景图使其适应游戏窗口
             window.blit(happy, (0, 0))
@@ -284,9 +285,10 @@ def daze_gif(window):
     :param window: pygame的游戏窗口对象
     :return: 无
     '''
+    clock = pygame.time.Clock()  # 游戏时钟对象
     for m in range(10):
         for n in range(5):
-            time.sleep(0.05)  # 相当于一秒20帧
+            clock.tick(20)  # 每秒运行20帧
             daze_image = pygame.image.load('gif/呆/' + str(n) + '.png')  # 加载'呆'gif图
             daze = pygame.transform.scale(daze_image, (WINDOW_X, WINDOW_Y))  # 拉伸游戏背景图使其适应游戏窗口
             window.blit(daze, (0, 0))
