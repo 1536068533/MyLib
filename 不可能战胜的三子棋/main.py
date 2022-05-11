@@ -67,7 +67,7 @@ def first_choice(windows, pos):
                             windows.blit(background, (0, 0))  # 渲染游戏背景图
                             pygame.display.update()  # 刷新游戏画面
                             return 'human'
-                clock.tick(24)  # 一秒22帧
+                clock.tick(24)  # 一秒24帧
                 gif_image = pygame.image.load('gif/不要/' + str(i) + '.jpg')  # 加载'不要'gif图
                 gif = pygame.transform.scale(gif_image, (WINDOW_X, WINDOW_Y))  # 拉伸游戏背景图使其适应游戏窗口
                 windows.blit(gif, (0, 0))

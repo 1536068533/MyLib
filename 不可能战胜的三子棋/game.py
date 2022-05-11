@@ -265,7 +265,7 @@ def happy_gif(window):
     clock = pygame.time.Clock()  # 游戏时钟对象
     for m in range(3):
         for n in range(27):
-            clock.tick(30)  # 每秒运行23帧
+            clock.tick(30)  # 每秒运行30帧
             happy_image = pygame.image.load('gif/开心/' + str(n) + '.jpg')  # 加载'开心'gif图
             happy = pygame.transform.scale(happy_image, (WINDOW_X, WINDOW_Y))  # 拉伸游戏背景图使其适应游戏窗口
             window.blit(happy, (0, 0))
