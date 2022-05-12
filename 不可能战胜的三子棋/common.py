@@ -5,6 +5,9 @@
 player_record = set()  # 记录玩家已下棋子的位置
 AI_record = set()  # 记录AI已下棋子的位置
 all_record = set()  # 记录所有已下棋子的位置
+sound_status = 1  # 背景音乐状态，1为满音量，0为静音
+sound_button = None  # main中创建的sound_button对象，放在这里方便game.py调用
+mouse = None  # main中创建的mouse对象，放在这里方便game.py调用
 
 
 def init():
@@ -55,3 +58,30 @@ def union_all_record():
 
 def get_all_record():
     return all_record
+
+
+def set_sound_status(status):
+    global sound_status
+    sound_status = status
+
+
+def get_sound_status():
+    return sound_status
+
+
+def set_sound_button(args):
+    global sound_button
+    sound_button = args
+
+
+def get_sound_button():
+    return sound_button
+
+
+def set_mouse(args):
+    global mouse
+    mouse = args
+
+
+def get_mouse():
+    return mouse

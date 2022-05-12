@@ -3,9 +3,11 @@ import random
 import os
 import time
 import datetime
+import re
 from tkinter import *
 from PIL import Image, ImageTk, ImageSequence
 from common import *
+from sprite import *
 
 WINDOW_X = 800  # 游戏窗口宽度
 WINDOW_Y = 800  # 游戏窗口高度
@@ -256,9 +258,46 @@ def referee(record):
     return 0
 
 
+def generalduty_gif(window, pwd, frames, cycle_index=1):
+    '''
+    通用的gif函数
+    :param window: pygame的游戏窗口对象
+    :param pwd: 存放gif的目录
+    :param frames: 每秒帧数
+    :param cycle_index:循环次数，默认gif只循环1次
+    :return: 无
+    '''
+    file_list = os.listdir(pwd)  # 搜索pwd目录下的所有文件名并保存为列表
+    try:
+        file_type = re.search(r'.\w+$', file_list[0]).group()  # 如果search没匹配到结果返回None，None.group()就会报错
+    except Exception as err:
+        print(err)
+        print("gif目录中没有搜索到符合正则表达式的结果\n请检查存放gif素材的目录，或检查代码中的generalduty_gif函数")
+    clock = pygame.time.Clock()  # 游戏时钟对象
+    for i in range(cycle_index):
+        for j in range(len(file_list)):
+            clock.tick(frames)  # 每秒运行帧数
+            gif_image = pygame.image.load(pwd + str(j) + file_type)
+            gif = pygame.transform.scale(gif_image, (WINDOW_X, WINDOW_Y))
+            window.blit(gif, (0, 0))
+            get_sound_button().update(window, get_sound_status())  # 刷新音量按钮
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:  # 保证在gif循环里也能随时退出
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.MOUSEBUTTONUP:
+                    get_mouse().update()  # 刷新鼠标精灵位置
+                    if pygame.sprite.collide_mask(get_sound_button(), get_mouse()):  # 判断是否在设置音量
+                        if get_sound_status():
+                            set_sound_status(0)
+                        else:
+                            set_sound_status(1)
+
+
 def happy_gif(window):
     '''
-    加载表达开心的gif，并且可以随时关闭游戏窗口
+    加载表达开心的gif，并且可以随时开关背景音乐和关闭游戏窗口
     :param window: pygame的游戏窗口对象
     :return: 无
     '''
@@ -272,16 +311,24 @@ def happy_gif(window):
             happy_txt = pygame.image.load('images/嘻嘻嘻.PNG')
             happy_txt_size = happy_txt.get_size()
             window.blit(happy_txt, (WINDOW_X / 2 - happy_txt_size[0] / 2, WINDOW_Y * 0.75))
+            get_sound_button().update(window, get_sound_status())  # 刷新音量按钮
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:  # 保证在gif循环里也能随时退出
                     pygame.quit()
                     exit()
+                if event.type == pygame.MOUSEBUTTONUP:
+                    get_mouse().update()  # 刷新鼠标精灵位置
+                    if pygame.sprite.collide_mask(get_sound_button(), get_mouse()):  # 判断是否在设置音量
+                        if get_sound_status():
+                            set_sound_status(0)
+                        else:
+                            set_sound_status(1)
 
 
 def daze_gif(window):
     '''
-    加载表达面容呆滞的gif，并且可以随时关闭游戏窗口
+    加载表达面容呆滞的gif，并且可以随时开关背景音乐和关闭游戏窗口
     :param window: pygame的游戏窗口对象
     :return: 无
     '''
@@ -294,11 +341,19 @@ def daze_gif(window):
             window.blit(daze, (0, 0))
             tie_txt = pygame.image.load('images/平局.PNG')
             window.blit(tie_txt, (WINDOW_X * 0.8, WINDOW_Y * 0.3))
+            get_sound_button().update(window, get_sound_status())  # 刷新音量按钮
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:  # 保证在gif循环里也能随时退出
                     pygame.quit()
                     exit()
+                if event.type == pygame.MOUSEBUTTONUP:
+                    get_mouse().update()  # 刷新鼠标精灵位置
+                    if pygame.sprite.collide_mask(get_sound_button(), get_mouse()):  # 判断是否在设置音量
+                        if get_sound_status():
+                            set_sound_status(0)
+                        else:
+                            set_sound_status(1)
 
 
 def cheer(window, image, image_disappear, player):
@@ -329,7 +384,6 @@ def cheer(window, image, image_disappear, player):
         elif player == get_AI_record():  # 如果胜利的是AI，加载获胜gif
             happy_gif(window)
     elif result == -1:  # 平局时处理
-        time.sleep(1.5)
         daze_gif(window)
 
 
