@@ -36,10 +36,12 @@ if __name__ == '__main__':
     https = 'https://acg.rip/page/1?term=%E9%97%B4%E8%B0%8D%E8%BF%87%E5%AE%B6%E5%AE%B6'
     next_page = https
     data = neaten(https_address(https))
+    page = 2
     while True:
         try:
-            next_page = 'https://acg.rip' + re.search(r'<li><a rel="next" href="(.*)">\d</a></li>',
+            next_page = 'https://acg.rip' + re.search(r'<li><a rel="next" href="(.*)">' + str(page) + '</a></li>',
                                                       https_address(next_page)).group(1)
+            page += 1
             data += neaten(https_address(next_page))
         except Exception:
             break
