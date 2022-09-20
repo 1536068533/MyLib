@@ -15,9 +15,10 @@ object TextTalkServer {
     val port = 9999
     val config = ConfigFactory.parseString(
       s"""
-         |akka.actor.provider="akka.remote.RemoteActorRefProvider"
-         |akka.remote.netty.tcp.hostname=$host
-         |akka.remote.netty.tcp.port=$port
+         |akka.actor.provider = "akka.remote.RemoteActorRefProvider"
+         |akka.remote.artery.enable = "on"
+         |akka.remote.artery.canonical.hostname = $host
+         |akka.remote.artery.canonical.port = $port
          |""".stripMargin)
 
     val serverActorSystem = ActorSystem("Server", config)
