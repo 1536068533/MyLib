@@ -1,87 +1,113 @@
-/*
-如果要创建更多用户，只需复制粘贴这里的所有代码，并将所有的uid1替换成uid2或uid3或……
-最后修改ip和端口号即可
- */
 package Chat.user
 
 import Chat.common._
+import Chat.user.User.{selfActorRef, userInformation}
 import akka.actor._
+import akka.pattern.ask
+import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
 import scala.io.StdIn
+import scala.language.postfixOps
 import scala.util.control.Breaks.{break, breakable}
 
-class uid1_Start  //用户独有的类，每个用户的Start类都不一样，用于自身的初始化
-
-class uid1(serverHost: String, serverPort: Int) extends Actor {
-  var serverActorRef: ActorSelection = _  //用于存放远程服务器的ActorRef
+class User(serverHost: String, serverPort: Int, nameServerActorSystem: String) extends Actor {
+  implicit val timeout: Timeout = Timeout(5 seconds) //阻塞等待最多5秒
+  var serverActorRef: ActorSelection = _ //用于存放远程服务器的ActorRef
 
   override def preStart: Unit = {
     serverActorRef = context.actorSelection(
-      s"akka://Server@$serverHost:$serverPort/user/TextTalkServer") //获取远程服务器的ActorRef
+      s"akka://Server@$serverHost:$serverPort/user/" + nameServerActorSystem) //获取远程服务器的ActorRef
   }
 
   override def receive: Receive = {
-    case _: uid1_Start =>
-      serverActorRef ! UserInformation("uid1", uid1.selfActorRef) //用户上线第一时间把自身名称和ActorRef上传服务器
-      println("uid1用户已上线！")
-    case message: MessageProtocol =>  //接收发来的聊天消息
-      println("\n" + message.user + "发来消息: " + message.message)
-      print("uid1@" + uid1.uid1Host + ":" + uid1.uid1Port + "# ")
-    case userMap: UserList => //一旦接收到用户信息表就会更新并打印全部用户信息
-      uid1.userInformation = userMap.userInformation
-      for ((k, v) <- uid1.userInformation) println(k + "\t" + v)
-    case "ls" => serverActorRef ! UserList(uid1.userInformation)  //向服务器发送用户信息表
-    case "shutdown" =>
-      println("接收到shutdown指令，退出系统")
-      serverActorRef ! Offline("uid1")  //下线前向服务器发送消息，删除本用户信息
-      context.stop(self)  //这条语句和下面的语句用来退出akka
+    case "start" => //用于初始化
+      serverActorRef ! RegisterUser("user", User.selfActorRef) //用户上线第一时间把自身名称和ActorRef上传服务器
+    case reply: RegisteredUser => //接收服务器的答复，判断是否注册成功，如果注册失败则退出程序
+      if (reply.reply) println("成功注册，您已上线！")
+      else {
+        println("用户注册失败（可能是用户名已存在）")
+        sys.exit() //退出程序
+      }
+    case message: MessageProtocol => //接收发来的聊天消息
+      println(message.user + "发来消息: " + message.message)
+    case userMap: UserList => User.userInformation = userMap.userInformation //接收并更新用户信息表
+    case "ls" =>
+      val future = serverActorRef ? UserList //向服务器发送请求，获取用户信息表，“？”表示阻塞等待
+      val result = Await.result(future, timeout.duration).asInstanceOf[UserList] //result接收返回值
+      userInformation = result.userInformation //更新用户信息表
+      //下面输出用户信息表
+      println("当前在线用户：\n用户名\tActorRef")
+      if (userInformation == null) println("userInformation = null")
+      else for ((k, v) <- User.userInformation) println(k + "\t" + v)
+    case "exit" =>
+      println("接收到exit指令，退出系统")
+      serverActorRef ! Offline("user") //下线前向服务器发送消息，删除本用户信息
+      context.stop(self) //这条语句和下面的语句用来退出akka
       context.system.terminate()
   }
 }
 
-object uid1 {
-  var selfActorRef: ActorRef = _  //用于存放自己的ActorRef
+object User {
+  var selfActorRef: ActorRef = _ //用于存放自己的ActorRef
   var userInformation: scala.collection.mutable.HashMap[String, ActorRef] = _ //用户名和对应的ActorRef的映射表
-  //配置本用户ip和端口和远程服务器的ip和端口
-  val (uid1Host, uid1Port, serverHost, serverPort) = ("127.0.0.1", 9990, "127.0.0.1", 9999)
+
   def main(args: Array[String]): Unit = {
+    //配置本用户ip和端口和远程服务器的ip和端口，端口号为0表示随机分配可用端口号
+    val (nameServerActorSystem, serverHost, serverPort, nameUserActor, userHost, userPort) =
+      (args(0), args(1), args(2).toInt, args(3), args(4), 0)
     //用于配置本用户的ip和端口，”akka.actor.allow-java-serialization = "on"“表示使用java来序列化，远程发送消息需要经过序列化
     val config = ConfigFactory.parseString(
       s"""
          |akka.actor.provider = "akka.remote.RemoteActorRefProvider"
          |akka.actor.allow-java-serialization = "on"
          |akka.remote.artery.enable = "on"
-         |akka.remote.artery.canonical.hostname = $uid1Host
-         |akka.remote.artery.canonical.port = $uid1Port
+         |akka.remote.artery.canonical.hostname = $userHost
+         |akka.remote.artery.canonical.port = $userPort
          |""".stripMargin)
-
-    val uid1ActorSystem = ActorSystem("user", config)
-    val uid1ActorRef: ActorRef = uid1ActorSystem.actorOf(Props(new uid1(serverHost, serverPort)), "uid1")
-    selfActorRef = uid1ActorRef
-
-    uid1ActorRef ! new uid1_Start
+    val userActorSystem = ActorSystem("user", config) //实例化ActorSystem
+    val userActorRef: ActorRef = userActorSystem.actorOf(
+      Props(new User(serverHost, serverPort, nameServerActorSystem)), nameUserActor)
+    selfActorRef = userActorRef
+    userActorRef ! "start"
+    println("ip = " + AddressExtension.hostOf(userActorSystem))
+    println("端口 = " + AddressExtension.portOf(userActorSystem))
     breakable(
       while (true) {
-        Thread.sleep(500) //延迟只是为了输出的格式好看，否则下面的Server@……#会和akka的信息不换行而叠在一起
         println("-" * 100)
-        println("ls->查看/刷新用户表")
-        print("uid1@" + uid1Host + ":" + uid1Port + "# ") //模仿Linux命令行界面
-        val order = StdIn.readLine()  //接收输入
+        println("ls->查看并刷新用户表")
+        val order = StdIn.readLine() //接收输入
         order match { //根据输入的字符串判断指令做对应操作
-          case "ls" =>  //获取，刷新，展示用户信息表
+          case "ls" => //获取，刷新，展示用户信息表
             selfActorRef ! "ls"
-          case "shutdown" =>  //关机下线
-            selfActorRef ! "shutdown"
+          case "exit" => //关机下线
+            selfActorRef ! "exit"
             break()
-          case user: String =>  //给用户发送消息
+          case user: String => //给用户发送消息
             if (userInformation.contains(user)) {
               print("发送消息@" + user + ": ")
               val mes = StdIn.readLine()
-              userInformation(user) ! MessageProtocol("uid1", mes)
+              userInformation(user) ! MessageProtocol(nameUserActor, mes)
             } else println("用户不存在或者您的输入有误，请重新输入！")
           case _ => println("没有匹配结果")
         }
       }
     )
   }
+}
+
+//class AddressExtension和object AddressExtension一起，调用hostOf返回ip，调用portOf返回端口
+class AddressExtension(system: ExtendedActorSystem) extends Extension {
+  val address: Address = system.provider.getDefaultAddress
+}
+
+//class AddressExtension和object AddressExtension一起，调用hostOf返回ip，调用portOf返回端口
+object AddressExtension extends ExtensionId[AddressExtension] {
+  def createExtension(system: ExtendedActorSystem): AddressExtension = new AddressExtension(system)
+
+  def hostOf(system: ActorSystem): String = AddressExtension(system).address.host.getOrElse("")
+
+  def portOf(system: ActorSystem): Int = AddressExtension(system).address.port.getOrElse(0)
 }
