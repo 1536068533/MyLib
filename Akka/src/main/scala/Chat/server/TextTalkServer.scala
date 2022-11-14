@@ -109,10 +109,10 @@ object TextTalkServer {
             if ("".equals(user)) println() //处理掉输入的空字符串
             else if (userInformation == null) println("userInformation = null，请尝试更新用户信息表（尝试“ls”命令）")
             else if ("@".equals(user.head.toString)) {
-              if (userInformation.contains(user)) {
-                print("发送消息@" + user + ": ")
+              if (userInformation.contains(user.tail)) {
+                print("发送消息@" + user.tail + ": ")
                 val mes = StdIn.readLine()
-                userInformation(user).userActorRef ! MessageProtocol("Server", mes)
+                userInformation(user.tail).userActorRef ! MessageProtocol("Server", mes)
               } else println("用户不存在或者您的输入有误，请重新输入！")
             } else println("没有匹配到命令，请重新输入！")
           case _ => println("没有匹配结果")
