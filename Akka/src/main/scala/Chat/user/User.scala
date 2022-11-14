@@ -12,14 +12,14 @@ import scala.io.StdIn
 import scala.language.postfixOps
 import scala.util.control.Breaks.{break, breakable}
 
-class User(nameServerActorSystem: String, serverHost: String, serverPort: Int, nameUserActor: String) extends Actor {
+class User(nameServerActorRef: String, serverHost: String, serverPort: Int, nameUserActor: String) extends Actor {
   implicit val timeout: Timeout = Timeout(5 seconds) //阻塞等待最多5秒
   var serverActorRef: ActorSelection = _ //用于存放远程服务器的ActorRef
   var lastCheckConnect: Long = System.currentTimeMillis() //System.currentTimeMillis()返回当前时间
 
   override def preStart: Unit = {
     serverActorRef = context.actorSelection(
-      s"akka://Server@$serverHost:$serverPort/user/" + nameServerActorSystem) //获取远程服务器的ActorRef
+      s"akka://Server@$serverHost:$serverPort/user/" + nameServerActorRef) //获取远程服务器的ActorRef
   }
 
   override def receive: Receive = {
@@ -73,8 +73,14 @@ object User {
   var userInformation: scala.collection.mutable.HashMap[String, UserInfo] = _ //用户名和对应的ActorRef的映射表
 
   def main(args: Array[String]): Unit = {
+    //检验参数
+    if (args.length != 5) {
+      println("[error] 运行需要服务器的ActorRef名字，服务器的ip，服务器的端口号，你的用户名，你的ip，你的端口号")
+      println("        例如：java -jar xxx.jar TextTalkServer 127.0.0.1 11821 uid4 127.0.0.1")
+      sys.exit() //退出程序
+    }
     //配置本用户ip和端口和远程服务器的ip和端口，端口号为0表示随机分配可用端口号
-    val (nameServerActorSystem, serverHost, serverPort, nameUserActor, userHost, userPort) =
+    val (nameServerActorRef, serverHost, serverPort, nameUserActor, userHost, userPort) =
       (args(0), args(1), args(2).toInt, args(3), args(4), 0)
     //用于配置本用户的ip和端口，”akka.actor.allow-java-serialization = "on"“表示使用java来序列化，远程发送消息需要经过序列化
     //注意：akka.actor.warn-about-java-serializer-usage = "off"这里忽略了java序列化的警告，使用java序列化性能差，不安全
@@ -89,13 +95,13 @@ object User {
          |""".stripMargin)
     val userActorSystem = ActorSystem("user", config) //实例化ActorSystem
     val userActorRef: ActorRef = userActorSystem.actorOf(
-      Props(new User(nameServerActorSystem, serverHost, serverPort, nameUserActor)), nameUserActor)
+      Props(new User(nameServerActorRef, serverHost, serverPort, nameUserActor)), nameUserActor)
     userActorRef ! "start"
     breakable(
       while (true) {
         println("-" * 100)
         println("ls->查看并刷新用户表\n”@+用户名“向用户发送消息（如@uid1）")
-        println("主机名 = " + nameUserActor + "\t" +
+        println("用户名 = " + nameUserActor + "\t" +
           "ip = " + AddressExtension.hostOf(userActorSystem) + "\t" +
           "端口 = " + AddressExtension.portOf(userActorSystem))
         val order = StdIn.readLine() //接收输入
