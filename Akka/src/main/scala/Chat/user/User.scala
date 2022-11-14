@@ -100,7 +100,7 @@ object User {
     breakable(
       while (true) {
         println("-" * 100)
-        println("ls->查看并刷新用户表\n”@+用户名“向用户发送消息（如@uid1）")
+        println("ls->查看并刷新用户表\n“@+用户名”向用户发送消息（如@uid1）")
         println("用户名 = " + nameUserActor + "\t" +
           "ip = " + AddressExtension.hostOf(userActorSystem) + "\t" +
           "端口 = " + AddressExtension.portOf(userActorSystem))
