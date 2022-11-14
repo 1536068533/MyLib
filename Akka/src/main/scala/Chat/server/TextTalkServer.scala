@@ -54,9 +54,9 @@ class TextTalkServer extends Actor {
         UserInfo => System.currentTimeMillis() - UserInfo.lastHeartBeat > 6000)
         .foreach(userInfo => TextTalkServer.userInformation.remove(userInfo.userName))
     case MessageProtocol(user, message) =>
-      println("*"*100)
+      println("*" * 100)
       println(user + "发来消息: " + message)
-      println("*"*100)
+      println("*" * 100)
     case Offline(user) => TextTalkServer.userInformation -= user
     case "shutdown" =>
       println("接收到shutdown指令，退出系统")
@@ -69,6 +69,11 @@ object TextTalkServer {
   val userInformation = new scala.collection.mutable.HashMap[String, UserInfo] //用户名和对应的ActorRef的映射表
 
   def main(args: Array[String]): Unit = {
+    //检验参数
+    if(args.length != 1){
+      println("[error] 运行需要ip地址参数，例如：java -jar xxx.jar 127.0.0.1")
+      sys.exit() //退出程序
+    }
     val (host, port) = (args(0), 0) //指定本服务器的ip，端口自动随机分配
     //用于配置本服务器的ip和端口，”akka.actor.allow-java-serialization = "on"“表示使用java来序列化，远程发送消息需要经过序列化
     //注意：akka.actor.warn-about-java-serializer-usage = "off"这里忽略了java序列化的警告，使用java序列化性能差，不安全
