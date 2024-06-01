@@ -13,7 +13,7 @@ import java.util.regex.Matcher;
 
 如果重命名失败则抛出异常
  */
-public class MyTest {
+public class FileRename {
     public static void main(String[] args) {
         //初始化
         File file_dir = new File("H:\\计算机类\\MySQL\\视频");
